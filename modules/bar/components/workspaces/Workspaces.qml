@@ -23,7 +23,9 @@ StyledClippingRect {
             occ[ws.id] = ws.lastIpcObject.windows > 0;
         return occ;
     }
-    readonly property int groupOffset: Math.floor((activeWsId - 1) / Config.bar.workspaces.shown) * Config.bar.workspaces.shown
+
+    // Monitors sorted by physical x position, so index 0 is the leftmost screen
+    readonly property var monitorsByPos: [...Hypr.monitors.values].sort((a, b) => (a.lastIpcObject?.x ?? 0) - (b.lastIpcObject?.x ?? 0))
 
     property real blur: onSpecial ? 1 : 0
 
@@ -46,20 +48,6 @@ StyledClippingRect {
             blurMax: 32
         }
 
-        Loader {
-            asynchronous: true
-            active: Config.bar.workspaces.occupiedBg
-
-            anchors.fill: parent
-            anchors.margins: Tokens.padding.extraSmall
-
-            sourceComponent: OccupiedBg {
-                workspaces: workspaces
-                occupied: root.occupied
-                groupOffset: root.groupOffset
-            }
-        }
-
         ColumnLayout {
             id: layout
 
@@ -67,35 +55,95 @@ StyledClippingRect {
             spacing: Math.floor(Tokens.spacing.extraSmall)
 
             Repeater {
-                id: workspaces
+                model: root.monitorsByPos.length
 
-                model: Config.bar.workspaces.shown
+                Item {
+                    id: group
 
-                Workspace {
-                    activeWsId: root.activeWsId
-                    occupied: root.occupied
-                    groupOffset: root.groupOffset
+                    required property int index
+                    readonly property var mon: root.monitorsByPos[index]
+                    readonly property var wsList: Hypr.workspaces.values.filter(w => w.monitor?.name === group.mon?.name && !w.name.startsWith("special")).sort((a, b) => a.id - b.id)
+                    readonly property int activeIdx: wsList.findIndex(w => w.id === (mon?.activeWorkspace?.id ?? -1))
+                    readonly property bool isThisScreen: root.screen.name === mon?.name
+                    readonly property bool monFocused: Hypr.focusedMonitor?.name === mon?.name
+                    readonly property Item activeItem: pills.count > 0 && activeIdx >= 0 ? pills.itemAt(activeIdx) : null
+                    readonly property Item colItem: col
+
+                    Layout.alignment: Qt.AlignHCenter
+                    implicitWidth: col.implicitWidth
+                    implicitHeight: col.implicitHeight
+
+                    // Capsule behind the workspace this screen is currently showing.
+                    // Bright accent on the focused screen, muted on the others.
+                    StyledRect {
+                        visible: group.activeItem !== null
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        y: col.y + (group.activeItem?.y ?? 0)
+                        implicitWidth: Tokens.sizes.bar.innerWidth - Tokens.padding.small
+                        implicitHeight: group.activeItem?.size ?? 0
+                        radius: Tokens.rounding.full
+                        color: group.monFocused ? Colours.palette.m3primary : "transparent"
+                        border.width: group.monFocused ? 0 : 1
+                        border.color: Colours.palette.m3outline
+
+                        Behavior on y {
+                            Anim {}
+                        }
+
+                        Behavior on implicitHeight {
+                            Anim {}
+                        }
+                    }
+
+                    ColumnLayout {
+                        id: col
+
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 0
+
+                        RowLayout {
+                            Layout.alignment: Qt.AlignHCenter
+                            Layout.topMargin: group.index > 0 ? Tokens.padding.small : 0
+
+                            spacing: 0
+
+                            MaterialIcon {
+                                text: "monitor"
+                                color: group.isThisScreen ? Colours.palette.m3primary : Colours.palette.m3outline
+                            }
+
+                            StyledText {
+                                text: group.index.toString()
+                                color: group.isThisScreen ? Colours.palette.m3primary : Colours.palette.m3outline
+                                font: Tokens.font.label.small
+                            }
+                        }
+
+                        Repeater {
+                            id: pills
+
+                            model: group.wsList.length
+
+                            Workspace {
+                                monFocused: group.monFocused
+                                activeWsId: group.mon?.activeWorkspace?.id ?? -1
+                                occupied: root.occupied
+                                groupOffset: (group.wsList[index]?.id ?? index + 1) - index - 1
+                            }
+                        }
+                    }
                 }
-            }
-        }
-
-        Loader {
-            asynchronous: true
-            anchors.horizontalCenter: parent.horizontalCenter
-            active: Config.bar.workspaces.activeIndicator
-
-            sourceComponent: ActiveIndicator {
-                activeWsId: root.activeWsId
-                workspaces: workspaces
-                mask: layout
-                fullscreen: root.fullscreen
             }
         }
 
         MouseArea {
             anchors.fill: layout
             onClicked: event => {
-                const ws = (layout.childAt(event.x, event.y) as Workspace)?.ws;
+                const g = layout.childAt(event.x, event.y);
+                if (!g)
+                    return;
+                const col = g.colItem ?? g;
+                const ws = (col.childAt(event.x - g.x - col.x, event.y - g.y - col.y) as Workspace)?.ws;
                 if (!ws)
                     return;
                 if (Hypr.activeWsId !== ws)

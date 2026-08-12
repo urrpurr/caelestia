@@ -15,6 +15,9 @@ ColumnLayout {
     required property int activeWsId
     required property var occupied
     required property int groupOffset
+    property bool monFocused: false
+
+    readonly property bool isActive: activeWsId === ws
 
     readonly property bool isWorkspace: true // Flag for finding workspace children
     // Unanimated prop for others to use as reference
@@ -29,30 +32,41 @@ ColumnLayout {
 
     spacing: 0
 
-    StyledText {
-        id: indicator
-
+    RowLayout {
         Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
         Layout.preferredHeight: Tokens.sizes.bar.innerWidth - Tokens.padding.small
 
-        animate: true
-        text: {
-            const ws = Hypr.workspaces.values.find(w => w.id === root.ws);
-            const wsName = !ws || ws.name == root.ws ? root.ws : ws.name[0];
-            let displayName = wsName.toString();
-            if (Config.bar.workspaces.capitalisation.toLowerCase() === "upper") {
-                displayName = displayName.toUpperCase();
-            } else if (Config.bar.workspaces.capitalisation.toLowerCase() === "lower") {
-                displayName = displayName.toLowerCase();
+        spacing: 1
+
+        StyledText {
+            id: indicator
+
+            animate: true
+            text: {
+                const ws = Hypr.workspaces.values.find(w => w.id === root.ws);
+                const wsName = !ws || ws.name == root.ws ? root.ws : ws.name[0];
+                let displayName = wsName.toString();
+                if (Config.bar.workspaces.capitalisation.toLowerCase() === "upper") {
+                    displayName = displayName.toUpperCase();
+                } else if (Config.bar.workspaces.capitalisation.toLowerCase() === "lower") {
+                    displayName = displayName.toLowerCase();
+                }
+                const label = Config.bar.workspaces.label || displayName;
+                const occupiedLabel = Config.bar.workspaces.occupiedLabel || label;
+                const activeLabel = Config.bar.workspaces.activeLabel || (root.isOccupied ? occupiedLabel : label);
+                return root.activeWsId === root.ws ? activeLabel : root.isOccupied ? occupiedLabel : label;
             }
-            const label = Config.bar.workspaces.label || displayName;
-            const occupiedLabel = Config.bar.workspaces.occupiedLabel || label;
-            const activeLabel = Config.bar.workspaces.activeLabel || (root.isOccupied ? occupiedLabel : label);
-            return root.activeWsId === root.ws ? activeLabel : root.isOccupied ? occupiedLabel : label;
+            color: root.isActive && root.monFocused ? Colours.palette.m3onPrimary : Config.bar.workspaces.occupiedBg || root.isOccupied ? Colours.palette.m3onSurface : Colours.layer(Colours.palette.m3outlineVariant, 2)
+            verticalAlignment: Qt.AlignVCenter
+            font.family: Tokens.font.workspaces
         }
-        color: Config.bar.workspaces.occupiedBg || root.isOccupied || root.activeWsId === root.ws ? Colours.palette.m3onSurface : Colours.layer(Colours.palette.m3outlineVariant, 2)
-        verticalAlignment: Qt.AlignVCenter
-        font.family: Tokens.font.workspaces
+
+        StyledText {
+            text: root.ws
+            font: Tokens.font.label.small
+            color: root.isActive && root.monFocused ? Colours.palette.m3onPrimary : Colours.palette.m3onSurfaceVariant
+            verticalAlignment: Qt.AlignVCenter
+        }
     }
 
     Loader {
@@ -105,7 +119,7 @@ ColumnLayout {
 
                     grade: 0
                     text: Icons.getAppCategoryIcon(modelData.lastIpcObject.class, "terminal")
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: root.isActive && root.monFocused ? Colours.palette.m3onPrimary : Colours.palette.m3onSurfaceVariant
                 }
             }
         }
