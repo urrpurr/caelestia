@@ -46,7 +46,7 @@ Column {
         command: Config.session.commands.shutdown
 
         KeyNavigation.up: logout
-        KeyNavigation.down: hibernate
+        KeyNavigation.down: reboot
     }
 
     AnimatedImage {
@@ -61,23 +61,15 @@ Column {
         fillMode: AnimatedImage.PreserveAspectFit
     }
 
-    SessionButton {
-        id: hibernate
-
-        icon: Config.session.icons.hibernate
-        command: Config.session.commands.hibernate
-
-        KeyNavigation.up: shutdown
-        KeyNavigation.down: reboot
-    }
-
+    // Hibernate button removed: desktop box, no swap — logind reports hibernate
+    // unavailable and the button was a no-op anyway.
     SessionButton {
         id: reboot
 
         icon: Config.session.icons.reboot
         command: Config.session.commands.reboot
 
-        KeyNavigation.up: hibernate
+        KeyNavigation.up: shutdown
     }
 
     component SessionButton: IconButton {
