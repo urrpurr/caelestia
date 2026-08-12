@@ -26,6 +26,9 @@ Item {
     property string activeLabel
     property string occupiedLabel
     property string label
+    // Set by the per-screen grouping in Workspaces.qml; SpecialWorkspaces leaves these off
+    property bool monFocused: false
+    property bool showNumber: false
 
     readonly property list<HyprlandToplevel> toplevels: Hypr.toplevelsForWs(ws, GlobalConfig.bar.workspaces.ignoredTags)
     readonly property bool isOccupied: toplevels.length > 0
@@ -40,7 +43,11 @@ Item {
         const mon = Hypr.workspaces.values.find(w => w.id === ws)?.monitor;
         return mon && mon !== monitor;
     }
+    // Content sits on the filled accent capsule when this is the focused screen's active workspace
+    readonly property bool onAccent: focused && monFocused
     readonly property color fgColour: {
+        if (onAccent)
+            return Colours.palette.m3onPrimary;
         if (onOtherMonitor)
             return offMonitorColour;
         if (focused || isOccupied || Config.bar.workspaces.occupiedBg)
@@ -178,20 +185,40 @@ Item {
         anchors.fill: parent
         spacing: 0
 
-        Loader {
-            id: indicator
-
+        // Indicator + workspace number side by side
+        RowLayout {
             Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
             Layout.preferredHeight: Tokens.sizes.bar.innerWidth - Tokens.padding.small
-            sourceComponent: {
-                if (root.displayType === BarWorkspaceDisplay.Icons)
-                    return iconLoaderComponent;
-                if (root.displayType === BarWorkspaceDisplay.Text)
-                    return textComponent;
-                return shapeComponent;
+
+            spacing: 1
+
+            Loader {
+                id: indicator
+
+                Layout.alignment: Qt.AlignVCenter
+                sourceComponent: {
+                    if (root.displayType === BarWorkspaceDisplay.Icons)
+                        return iconLoaderComponent;
+                    if (root.displayType === BarWorkspaceDisplay.Text)
+                        return textComponent;
+                    return shapeComponent;
+                }
+
+                onItemChanged: root.updateShape()
             }
 
-            onItemChanged: root.updateShape()
+            StyledText {
+                Layout.alignment: Qt.AlignVCenter
+                visible: root.showNumber
+                text: root.ws
+                font: Tokens.font.label.small
+                color: root.onAccent ? Colours.palette.m3onPrimary : Colours.palette.m3onSurfaceVariant
+                verticalAlignment: Qt.AlignVCenter
+
+                Behavior on color {
+                    CAnim {}
+                }
+            }
         }
 
         Loader {
@@ -229,7 +256,7 @@ Item {
                     grade: 0
                     horizontalAlignment: Text.AlignHCenter
                     text: Icons.getAppCategoryIcon(modelData.lastIpcObject.class, "terminal")
-                    color: root.onOtherMonitor ? root.offMonitorColour : Colours.palette.m3onSurfaceVariant
+                    color: root.onAccent ? Colours.palette.m3onPrimary : root.onOtherMonitor ? root.offMonitorColour : Colours.palette.m3onSurfaceVariant
 
                     opacity: LazyListView.adding || LazyListView.removing ? 0 : 1
 

@@ -2,9 +2,9 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Effects
+import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
-import Caelestia
 import Caelestia.Components
 import Caelestia.Config
 import qs.components
@@ -18,55 +18,15 @@ StyledClippingRect {
 
     readonly property HyprlandMonitor monitor: Hypr.monitorFor(screen)
     readonly property bool onSpecial: monitor?.lastIpcObject.specialWorkspace?.name !== ""
-    readonly property int activeWsId: monitor.activeWorkspace?.id ?? 1
-    readonly property int activeWsIdx: workspaceIndex(activeWsId)
-    readonly property int shown: Math.max(1, Config.bar.workspaces.shown)
 
-    readonly property var wsIds: {
-        if (Config.bar.workspaces.showUnoccupied)
-            return Array.from({
-                length: shown
-            }, (_, i) => i + 1);
-
-        const allMonitors = !Config.bar.workspaces.perMonitor;
-        const ignoredTags = GlobalConfig.bar.workspaces.ignoredTags;
-        const workspaces = Hypr.workspaces.values.filter(w => w.id > 0 && (allMonitors || w.monitor === root.monitor) && (w.id === activeWsId || w.toplevels.values.some(t => !Hypr.isToplevelIgnored(t, ignoredTags))));
-        const currentIdx = workspaces.findIndex(w => w.id === activeWsId);
-        if (currentIdx < 0)
-            return [];
-
-        const end = CUtils.clamp(currentIdx + 1, Math.min(shown, workspaces.length), workspaces.length);
-        const start = Math.max(0, end - shown);
-
-        return workspaces.slice(start, end).map(w => w.id);
-    }
-
-    readonly property var workspaces: {
-        workspaces.itemsDirty;
-        return wsIds.map(id => workspaces.itemAtIndex(workspaceIndex(id)));
-    }
-
-    // Only relevant for when showUnoccupied is true
-    readonly property int groupOffset: {
-        if (!Config.bar.workspaces.showUnoccupied)
-            return 0;
-        return Math.floor((activeWsId - 1) / shown) * shown;
-    }
+    // Custom: every screen's workspaces, grouped per screen (upstream's shown/showUnoccupied/perMonitor
+    // windowing doesn't apply). Monitors sorted by physical x position, so index 0 is the leftmost screen.
+    readonly property var monitorsByPos: [...Hypr.monitors.values].sort((a, b) => (a.lastIpcObject?.x ?? 0) - (b.lastIpcObject?.x ?? 0))
 
     property real blur: onSpecial ? 1 : 0
 
-    function workspaceIndex(id: int): int {
-        if (!Config.bar.workspaces.showUnoccupied)
-            return wsIds.indexOf(id);
-
-        let index = id - 1;
-        while (index < 0)
-            index += shown;
-        return index % shown;
-    }
-
     implicitWidth: Tokens.sizes.bar.innerWidth
-    implicitHeight: workspaces.layoutHeight + workspaces.anchors.margins * 2
+    implicitHeight: groups.implicitHeight + Tokens.padding.extraSmall * 2
 
     color: Colours.tPalette.m3surfaceContainer
     radius: Tokens.rounding.full
@@ -84,101 +44,121 @@ StyledClippingRect {
             blurMax: 32
         }
 
-        Loader {
-            asynchronous: true
-            opacity: Config.bar.workspaces.occupiedBg ? 1 : 0
-            active: opacity > 0
-
-            anchors.fill: parent
-            anchors.margins: Tokens.padding.extraSmall
-
-            sourceComponent: OccupiedBg {
-                workspaces: root.workspaces
-                wsSpacing: workspaces.spacing
-            }
-
-            Behavior on opacity {
-                Anim {
-                    type: Anim.DefaultEffects
-                }
-            }
-        }
-
-        LazyListView {
-            id: workspaces
+        // One group per screen: monitor header, then that screen's workspaces.
+        // Filled accent capsule = focused screen's active workspace; outline ring = other screens' active one.
+        ColumnLayout {
+            id: groups
 
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
             anchors.margins: Tokens.padding.extraSmall
-            implicitHeight: contentHeight
 
-            spacing: Tokens.spacing.extraSmall
-            removeDuration: Tokens.anim.durations.expressiveDefaultEffects
+            spacing: 0
 
-            model: ScriptModel {
-                values: root.wsIds
-            }
+            Repeater {
+                model: root.monitorsByPos.length
 
-            delegate: Workspace {
-                activeWsId: root.activeWsId
-                ws: Config.bar.workspaces.showUnoccupied ? root.groupOffset + index + 1 : modelData
-                monitor: root.monitor
+                Item {
+                    id: group
 
-                displayType: Config.bar.workspaces.displayType
-                showWindows: Config.bar.workspaces.showWindows
-                iconRules: GlobalConfig.bar.workspaces.workspaceIcons
-                activeLabel: Config.bar.workspaces.activeLabel
-                occupiedLabel: Config.bar.workspaces.occupiedLabel
-                label: Config.bar.workspaces.label
-            }
-        }
+                    required property int index
+                    readonly property HyprlandMonitor mon: root.monitorsByPos[index] ?? null
+                    readonly property var wsIds: Hypr.workspaces.values.filter(w => w.monitor === group.mon && !w.name.startsWith("special")).map(w => w.id).sort((a, b) => a - b)
+                    readonly property int activeWsId: mon?.activeWorkspace?.id ?? -1
+                    readonly property bool isThisScreen: root.monitor === mon
+                    readonly property bool monFocused: Hypr.focusedMonitor === mon
+                    readonly property Workspace activeItem: {
+                        list.itemsDirty;
+                        return list.itemAtIndex(wsIds.indexOf(activeWsId)) as Workspace;
+                    }
 
-        Loader {
-            asynchronous: true
-            opacity: Config.bar.workspaces.showUnoccupied ? 0 : 1
-            active: opacity > 0
+                    Layout.fillWidth: true
+                    Layout.topMargin: index > 0 ? Tokens.padding.small : 0
+                    implicitHeight: header.implicitHeight + list.layoutHeight
 
-            anchors.fill: parent
-            anchors.margins: Tokens.padding.extraSmall
+                    StyledRect {
+                        visible: group.activeItem !== null
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        y: list.y + (group.activeItem?.LazyListView.layoutY ?? 0)
+                        implicitWidth: Tokens.sizes.bar.innerWidth - Tokens.padding.small
+                        implicitHeight: group.activeItem?.LazyListView.preferredHeight ?? 0
+                        radius: Tokens.rounding.full
+                        color: group.monFocused ? Colours.palette.m3primary : "transparent"
+                        border.width: group.monFocused ? 0 : 1
+                        border.color: Colours.palette.m3outline
 
-            sourceComponent: GapMarkers {
-                workspaces: root.workspaces
-                wsSpacing: workspaces.spacing
-            }
+                        Behavior on y {
+                            Anim {}
+                        }
 
-            Behavior on opacity {
-                Anim {
-                    type: Anim.DefaultEffects
+                        Behavior on implicitHeight {
+                            Anim {}
+                        }
+                    }
+
+                    RowLayout {
+                        id: header
+
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 0
+
+                        MaterialIcon {
+                            text: "monitor"
+                            color: group.isThisScreen ? Colours.palette.m3primary : Colours.palette.m3outline
+                        }
+
+                        StyledText {
+                            text: group.index.toString()
+                            color: group.isThisScreen ? Colours.palette.m3primary : Colours.palette.m3outline
+                            font: Tokens.font.label.small
+                        }
+                    }
+
+                    LazyListView {
+                        id: list
+
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: header.bottom
+                        implicitHeight: contentHeight
+
+                        spacing: 0
+                        removeDuration: Tokens.anim.durations.expressiveDefaultEffects
+
+                        model: ScriptModel {
+                            values: group.wsIds
+                        }
+
+                        delegate: Workspace {
+                            activeWsId: group.activeWsId
+                            ws: modelData
+                            monitor: group.mon
+                            monFocused: group.monFocused
+                            showNumber: true
+
+                            displayType: Config.bar.workspaces.displayType
+                            showWindows: Config.bar.workspaces.showWindows
+                            iconRules: GlobalConfig.bar.workspaces.workspaceIcons
+                            activeLabel: Config.bar.workspaces.activeLabel
+                            occupiedLabel: Config.bar.workspaces.occupiedLabel
+                            label: Config.bar.workspaces.label
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: list
+                        onClicked: event => {
+                            const ws = (list.itemAt(event.x, event.y) as Workspace)?.ws;
+                            if (!ws)
+                                return;
+                            if (Hypr.activeWsId !== ws)
+                                Hypr.focusWorkspace(ws);
+                            else
+                                Hypr.toggleSpecial("special");
+                        }
+                    }
                 }
-            }
-        }
-
-        Loader {
-            asynchronous: true
-            anchors.left: workspaces.left
-            anchors.right: workspaces.right
-            active: Config.bar.workspaces.activeIndicator
-
-            sourceComponent: ActiveIndicator {
-                activeWs: {
-                    workspaces.itemsDirty;
-                    return workspaces.itemAtIndex(root.activeWsIdx) as Workspace;
-                }
-                mask: workspaces
-            }
-        }
-
-        MouseArea {
-            anchors.fill: workspaces
-            onClicked: event => {
-                const ws = (workspaces.itemAt(event.x, event.y) as Workspace)?.ws;
-                if (!ws)
-                    return;
-                if (Hypr.activeWsId !== ws)
-                    Hypr.focusWorkspace(ws);
-                else
-                    Hypr.toggleSpecial("special");
             }
         }
 
