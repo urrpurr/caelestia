@@ -78,6 +78,10 @@ MouseArea {
                 Quickshell.execDetached(["sh", "-c", "wl-copy --type image/png < " + path]);
                 Quickshell.execDetached(["notify-send", "-a", "caelestia-cli", "-i", path, "Screenshot taken", "Screenshot copied to clipboard"]);
             } else {
+                // Also copy the raw capture immediately — the editor (swappy) is
+                // then only needed for annotating; its own copy button overwrites
+                // the clipboard with the edited version.
+                Quickshell.execDetached(["sh", "-c", "wl-copy --type image/png < " + path]);
                 Quickshell.execDetached(["swappy", "-f", path]);
             }
             closeAnim.start();
