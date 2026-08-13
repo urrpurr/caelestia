@@ -108,6 +108,17 @@ StyledRect {
                             color: root.colour
                             fontStyle: Tokens.font.icon.medium
                             fill: 1
+
+                            // Fork: right-click toggles output mute
+                            MouseArea {
+                                anchors.fill: parent
+                                acceptedButtons: Qt.RightButton
+                                onClicked: {
+                                    const a = Audio.sink?.audio;
+                                    if (a)
+                                        a.muted = !a.muted;
+                                }
+                            }
                         }
                     }
                 }
@@ -124,6 +135,17 @@ StyledRect {
                             color: root.colour
                             fontStyle: Tokens.font.icon.medium
                             fill: 1
+
+                            // Fork: right-click toggles mic mute
+                            MouseArea {
+                                anchors.fill: parent
+                                acceptedButtons: Qt.RightButton
+                                onClicked: {
+                                    const a = Audio.source?.audio;
+                                    if (a)
+                                        a.muted = !a.muted;
+                                }
+                            }
                         }
                     }
                 }
