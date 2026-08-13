@@ -154,6 +154,9 @@ ColumnLayout {
                 delegate: EntryWrapper {
                     Tray {
                         objectName: "taskbarTray"
+                        // Fork: right-click opens the item's menu popout
+                        popouts: root.popouts
+                        barRoot: root
                     }
                 }
             }
