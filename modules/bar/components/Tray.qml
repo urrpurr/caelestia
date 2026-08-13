@@ -14,6 +14,10 @@ StyledRect {
     readonly property alias items: items
     readonly property alias expandIcon: expandIcon
 
+    // Fork: passed down to TrayItem for right-click menu popouts
+    property var popouts
+    property Item barRoot
+
     readonly property int padding: Config.bar.tray.background ? Tokens.padding.medium : Tokens.padding.extraSmall
     readonly property int spacing: Config.bar.tray.background ? Tokens.spacing.medium : Tokens.spacing.extraSmall
 
@@ -74,7 +78,10 @@ StyledRect {
                 values: SystemTray.items.values.filter(i => !GlobalConfig.bar.tray.hiddenIcons.includes(i.id))
             }
 
-            TrayItem {}
+            TrayItem {
+                popouts: root.popouts
+                barRoot: root.barRoot
+            }
         }
 
         Behavior on opacity {
