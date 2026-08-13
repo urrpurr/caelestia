@@ -20,8 +20,10 @@ Singleton {
             "general:gaps_in": 0,
             "general:gaps_out": 0,
             "general:border_size": 1,
-            "decoration:rounding": 0,
-            "general:allow_tearing": 1
+            "decoration:rounding": 0
+            // Fork: allow_tearing removed from game mode. This box is 240Hz
+            // VRR — tearing buys nothing (jitter math done 2026-08-13), and
+            // the button's use case here is windowed games. NEVER re-add.
         });
     }
 
