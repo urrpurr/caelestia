@@ -124,6 +124,14 @@ Item {
             }
         }
 
+        // Fork: mic split out of the audio popout (see MicPopout.qml header)
+        Popout {
+            name: "microphone"
+            sourceComponent: MicPopout {
+                popouts: root.popouts
+            }
+        }
+
         Popout {
             name: "kblayout"
             sourceComponent: KbLayout {}

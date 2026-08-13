@@ -5,57 +5,53 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell.Services.Pipewire
 import Caelestia.Config
-import Caelestia.I18n
 import qs.components
 import qs.components.controls
 import qs.services
 
+// Fork addition: microphone popout, split out of the combined audio popout —
+// input device selection + master mic volume (which the combined popout
+// never offered). Opened by hovering the bar's microphone status icon.
 Item {
     id: root
 
     required property PopoutState popouts
 
-    implicitWidth: Tokens.sizes.bar.audioWidth
+    implicitWidth: layout.implicitWidth + Tokens.padding.medium * 2
     implicitHeight: layout.implicitHeight + Tokens.padding.medium * 2
 
     ButtonGroup {
-        id: sinks
+        id: sources
     }
 
     ColumnLayout {
         id: layout
 
         anchors.left: parent.left
-        anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         spacing: Tokens.spacing.medium
 
         StyledText {
-            text: Tr.trCtx("Output device", "audio output device")
+            text: qsTr("Input device")
             font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
         }
 
         Repeater {
-            model: Audio.sinks
+            model: Audio.sources
 
             StyledRadioButton {
-                id: control
-
                 required property PwNode modelData
 
-                Layout.fillWidth: true
-                ButtonGroup.group: sinks
-                checked: Audio.sink?.id === modelData.id
-                onClicked: Audio.setAudioSink(modelData)
+                ButtonGroup.group: sources
+                checked: Audio.source?.id === modelData.id
+                onClicked: Audio.setAudioSource(modelData)
                 text: modelData.description
             }
         }
 
-        // Fork: input-device section moved to MicPopout.qml (mic icon's popout)
-
         StyledText {
             Layout.topMargin: Tokens.spacing.medium
-            text: Audio.muted ? Tr.tr("Volume (muted)") : Tr.tr("Volume (%1%)").arg(Math.round(Audio.volume * 100))
+            text: qsTr("Mic volume (%1)").arg(Audio.sourceMuted ? qsTr("Muted") : `${Math.round(Audio.sourceVolume * 100)}%`)
             font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
         }
 
@@ -65,9 +61,9 @@ Item {
 
             onWheel: event => {
                 if (event.angleDelta.y > 0)
-                    Audio.incrementVolume();
+                    Audio.incrementSourceVolume();
                 else if (event.angleDelta.y < 0)
-                    Audio.decrementVolume();
+                    Audio.decrementSourceVolume();
             }
 
             StyledSlider {
@@ -75,8 +71,8 @@ Item {
                 anchors.right: parent.right
                 implicitHeight: parent.implicitHeight
 
-                value: Audio.volume
-                onInteraction: value => Audio.setVolume(value)
+                value: Audio.sourceVolume
+                onInteraction: value => Audio.setSourceVolume(value)
             }
         }
 
@@ -86,7 +82,7 @@ Item {
             inactiveColour: Colours.palette.m3primaryContainer
             inactiveOnColour: Colours.palette.m3onPrimaryContainer
             verticalPadding: Tokens.padding.extraSmall
-            text: Tr.tr("Open settings")
+            text: qsTr("Open settings")
             icon: "settings"
 
             onClicked: root.popouts.detachRequested("audio")
