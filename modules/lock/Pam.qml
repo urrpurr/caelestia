@@ -30,7 +30,20 @@ Scope {
 
     signal flashMsg
 
+    property double lastWakeSpawn: 0
+
     function handleKey(event: KeyEvent): void {
+        // Fork: any key at the lock lights blanked screens. idle-wake.sh is
+        // guarded (exits unless a monitor is dpms-off and session Active), so
+        // this is a no-op during normal typing. Fixes the 2026-08-13
+        // stuck-black incident: a blank from lock-now.sh's timer has no
+        // hypridle on-resume pairing, so nothing woke the screens on input.
+        const now = Date.now();
+        if (now - lastWakeSpawn > 3000) {
+            lastWakeSpawn = now;
+            Quickshell.execDetached(["sh", "-c", "~/.config/hypr/scripts/idle-wake.sh"]);
+        }
+
         if (passwd.active)
             return;
 
