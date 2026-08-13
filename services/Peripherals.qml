@@ -78,4 +78,53 @@ Singleton {
         triggeredOnStart: true
         onTriggered: root.refresh()
     }
+
+    // Event-driven refresh (poll above is only the fallback), same triggers the
+    // waybar setup used: kdeconnect signals the instant the phone pushes
+    // battery state or (un)reaches; udev fires on the mouse's USB plug/unplug.
+
+    Process {
+        id: phoneMonitor
+
+        command: ["dbus-monitor", "--profile",
+            "type='signal',interface='org.kde.kdeconnect.device.battery',member='refreshed'",
+            "type='signal',interface='org.kde.kdeconnect.device',member='reachableChanged'"]
+        running: true
+
+        stdout: SplitParser {
+            onRead: root.refresh()
+        }
+        onExited: monitorRestartTimer.start() // qmllint disable signal-handler-parameters
+    }
+
+    Process {
+        id: mouseMonitor
+
+        // Razer vendor id 1532; delay before reading — right after plug the
+        // mouse reports a bogus 0% while handshaking (see battery.sh note)
+        command: ["bash", "-c", "stdbuf -oL udevadm monitor --udev --property --subsystem-match=usb | stdbuf -oL grep --line-buffered 'ID_VENDOR_ID=1532'"]
+        running: true
+
+        stdout: SplitParser {
+            onRead: mouseSettleTimer.restart()
+        }
+        onExited: monitorRestartTimer.start() // qmllint disable signal-handler-parameters
+    }
+
+    Timer {
+        id: mouseSettleTimer
+
+        interval: 2000
+        onTriggered: root.refresh()
+    }
+
+    Timer {
+        id: monitorRestartTimer
+
+        interval: 5000
+        onTriggered: {
+            phoneMonitor.running = true;
+            mouseMonitor.running = true;
+        }
+    }
 }
