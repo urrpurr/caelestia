@@ -15,10 +15,9 @@ RowLayout {
         Layout.fillWidth: true
         spacing: Tokens.spacing.medium
 
-        WeatherInfo {
-            Layout.fillWidth: true
-            rootHeight: root.height
-        }
+        // Fork: WeatherInfo removed from the lockscreen — owner doesn't care
+        // about weather. (Dashboard's Weather tab is off via
+        // dashboard.showWeather=false in shell.json.)
 
         Fetch {
             Layout.fillWidth: true
