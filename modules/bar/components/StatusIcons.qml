@@ -109,10 +109,10 @@ StyledRect {
                             fontStyle: Tokens.font.icon.medium
                             fill: 1
 
-                            // Fork: right-click toggles output mute
+                            // Fork: left-click toggles output mute
                             MouseArea {
                                 anchors.fill: parent
-                                acceptedButtons: Qt.RightButton
+                                acceptedButtons: Qt.LeftButton
                                 onClicked: {
                                     const a = Audio.sink?.audio;
                                     if (a)
@@ -136,10 +136,10 @@ StyledRect {
                             fontStyle: Tokens.font.icon.medium
                             fill: 1
 
-                            // Fork: right-click toggles mic mute
+                            // Fork: left-click toggles mic mute
                             MouseArea {
                                 anchors.fill: parent
-                                acceptedButtons: Qt.RightButton
+                                acceptedButtons: Qt.LeftButton
                                 onClicked: {
                                     const a = Audio.source?.audio;
                                     if (a)
