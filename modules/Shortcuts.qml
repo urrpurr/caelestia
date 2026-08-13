@@ -20,9 +20,11 @@ Scope {
         onPressed: WindowFactory.create()
     }
 
-    // Fork: hold-Super bar reveal. The global-shortcut protocol delivers both
-    // press and release through ONE hyprland bind (SUPER, SUPER_L -> global,
-    // caelestia:showBar in hyprland.lua) — no bindr pair needed. Only
+    // Fork: hold-Super bar reveal. Press arrives via the global shortcut
+    // (bare SUPER_L bind in hyprland.lua); the RELEASE never reaches us —
+    // lua-wrapped binds lose hyprland's native global-release tracking — so
+    // hyprland.lua polls is_key_down and hides via `drawers hide bar` IPC.
+    // onReleased kept for the day the protocol release works. Only
     // non-persistent bars change (the OLED; see BarWrapper.persistentBar).
     // qmllint disable unresolved-type
     CustomShortcut {
