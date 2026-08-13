@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Effects
+import Quickshell
 import Quickshell.Wayland
 import Caelestia.Config
 import qs.components
@@ -27,6 +28,25 @@ WlSessionLockSurface {
         }
 
         target: root.lock
+    }
+
+    // Fork: mouse-wiggle wakes blanked screens (companion to the key-press
+    // wake in Pam.qml — see comment there). NoButton + hover = observes
+    // movement without stealing clicks from the lock UI.
+    MouseArea {
+        property double lastWakeSpawn: 0
+
+        anchors.fill: parent
+        z: 9999
+        acceptedButtons: Qt.NoButton
+        hoverEnabled: true
+        onPositionChanged: {
+            const now = Date.now();
+            if (now - lastWakeSpawn > 3000) {
+                lastWakeSpawn = now;
+                Quickshell.execDetached(["sh", "-c", "~/.config/hypr/scripts/idle-wake.sh"]);
+            }
+        }
     }
 
     SequentialAnimation {
