@@ -41,6 +41,13 @@ Item {
                 iconName: "cloud",
                 text: Tr.tr("Weather"),
                 enabled: Config.dashboard.showWeather
+            },
+            {
+                // Fork: peripheral batteries (waybar pill migration)
+                component: batteriesComponent,
+                iconName: "battery_full",
+                text: qsTr("Batteries"),
+                enabled: true
             }
         ];
         return allTabs.filter(tab => tab.enabled);
@@ -180,6 +187,12 @@ Item {
                 id: weatherComponent
 
                 WeatherTab {}
+            }
+
+            Component {
+                id: batteriesComponent
+
+                Batteries {}
             }
 
             Behavior on contentX {
