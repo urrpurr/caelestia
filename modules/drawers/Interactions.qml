@@ -232,8 +232,10 @@ CustomMouseArea {
                 screenState.dashboard = false;
         }
 
-        // Show utilities on hover
-        const showUtilities = inBottomPanel(panels.utilities, x, y, true);
+        // Fork: utilities hover-reveal disabled (same accidental-trigger class
+        // as the OSD hover). Utilities stays reachable via the sidebar and
+        // `qs ipc -c caelestia call drawers toggle utilities`.
+        const showUtilities = false;
 
         // Always update visibility based on hover if not in shortcut mode
         if (!utilitiesShortcutActive) {
