@@ -15,6 +15,20 @@ StyledRect {
     property color colour: Colours.palette.m3secondary
     readonly property alias items: iconColumn
 
+    // Fork: right-click popout opening (owner dislikes hover triggers).
+    // Mirrors the assignments Bar.qml's hover path makes; hover for status
+    // icons is disabled via bar.popouts.statusIcons=false in shell.json.
+    property var popouts
+    property Item barRoot
+
+    function openPopout(name: string, icon: Item): void {
+        if (!popouts || !barRoot)
+            return;
+        popouts.currentName = name;
+        popouts.currentCenter = Qt.binding(() => icon.mapToItem(barRoot, 0, icon.implicitHeight / 2).y);
+        popouts.hasCurrent = true;
+    }
+
     readonly property int spacing: Tokens.spacing.medium / 2
 
     // Index of the first/last entry that isn't collapsed, for edge margin gating
@@ -75,6 +89,12 @@ StyledRect {
                 text: "brightness_6"
                 color: root.colour
                 fontStyle: Tokens.font.icon.medium
+
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.RightButton
+                    onClicked: root.openPopout("brightness", brightnessIcon)
+                }
             }
         }
 
@@ -103,17 +123,24 @@ StyledRect {
                         margin: Tokens.spacing.extraSmall / 2
 
                         MaterialIcon {
+                            id: audioIcon
+
                             animate: true
                             text: Icons.getVolumeIcon(Audio.volume, Audio.muted)
                             color: root.colour
                             fontStyle: Tokens.font.icon.medium
                             fill: 1
 
-                            // Fork: left-click toggles output mute
+                            // Fork: left-click toggles output mute; right-click
+                            // opens the audio popout (hover disabled)
                             MouseArea {
                                 anchors.fill: parent
-                                acceptedButtons: Qt.LeftButton
-                                onClicked: {
+                                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                onClicked: event => {
+                                    if (event.button === Qt.RightButton) {
+                                        root.openPopout("audio", audioIcon);
+                                        return;
+                                    }
                                     const a = Audio.sink?.audio;
                                     if (a)
                                         a.muted = !a.muted;
@@ -130,17 +157,24 @@ StyledRect {
                         // no longer the combined audio popout
 
                         MaterialIcon {
+                            id: micIcon
+
                             animate: true
                             text: Icons.getMicVolumeIcon(Audio.sourceVolume, Audio.sourceMuted)
                             color: root.colour
                             fontStyle: Tokens.font.icon.medium
                             fill: 1
 
-                            // Fork: left-click toggles mic mute
+                            // Fork: left-click toggles mic mute; right-click
+                            // opens the mic popout (hover disabled)
                             MouseArea {
                                 anchors.fill: parent
-                                acceptedButtons: Qt.LeftButton
-                                onClicked: {
+                                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                onClicked: event => {
+                                    if (event.button === Qt.RightButton) {
+                                        root.openPopout("microphone", micIcon);
+                                        return;
+                                    }
                                     const a = Audio.source?.audio;
                                     if (a)
                                         a.muted = !a.muted;
@@ -164,9 +198,18 @@ StyledRect {
                     roleValue: "network"
                     delegate: EntryWrapper {
                         MaterialIcon {
+                            id: networkIcon
+
                             animate: true
                             text: Nmcli.activeEthernet ? "cable" : Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0) : "wifi_off"
                             color: root.colour
+
+                            // Fork: right-click opens the network popout (hover disabled)
+                            MouseArea {
+                                anchors.fill: parent
+                                acceptedButtons: Qt.RightButton
+                                onClicked: root.openPopout("network", networkIcon)
+                            }
                         }
                     }
                 }

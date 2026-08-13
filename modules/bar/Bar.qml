@@ -170,6 +170,10 @@ ColumnLayout {
                 delegate: EntryWrapper {
                     StatusIcons {
                         objectName: "taskbarStatusIcons"
+                        // Fork: right-click popouts (hover disabled via
+                        // bar.popouts.statusIcons=false in shell.json)
+                        popouts: root.popouts
+                        barRoot: root
                     }
                 }
             }
