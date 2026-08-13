@@ -22,10 +22,6 @@ Item {
         id: sinks
     }
 
-    ButtonGroup {
-        id: sources
-    }
-
     ColumnLayout {
         id: layout
 
@@ -55,25 +51,7 @@ Item {
             }
         }
 
-        StyledText {
-            Layout.topMargin: Tokens.spacing.medium
-            text: Tr.trCtx("Input device", "audio input device")
-            font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
-        }
-
-        Repeater {
-            model: Audio.sources
-
-            StyledRadioButton {
-                required property PwNode modelData
-
-                Layout.fillWidth: true
-                ButtonGroup.group: sources
-                checked: Audio.source?.id === modelData.id
-                onClicked: Audio.setAudioSource(modelData)
-                text: modelData.description
-            }
-        }
+        // Fork: input-device section moved to MicPopout.qml (mic icon's popout)
 
         StyledText {
             Layout.topMargin: Tokens.spacing.medium

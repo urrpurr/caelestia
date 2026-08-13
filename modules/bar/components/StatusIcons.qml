@@ -115,7 +115,8 @@ StyledRect {
                     roleValue: "microphone"
                     delegate: EntryWrapper {
                         margin: Tokens.spacing.extraSmall / 2
-                        name: "audio" // Mic opens audio popout
+                        // Fork: default name ("microphone") → dedicated MicPopout,
+                        // no longer the combined audio popout
 
                         MaterialIcon {
                             animate: true
