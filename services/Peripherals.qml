@@ -32,15 +32,25 @@ Singleton {
         id: proc
 
         command: ["bash", "-c", `
-            mp=""; mc=0
-            for f in /sys/bus/hid/drivers/razermouse/*/charge_level; do
-                [ -r "$f" ] || continue
-                p=$(( $(cat "$f") * 100 / 255 ))
-                if [ -z "$mp" ] || [ "$p" -gt "$mp" ]; then
-                    mp=$p
-                    s="\${f%charge_level}charge_status"
-                    { [ -r "$s" ] && [ "$(cat "$s")" = 1 ]; } && mc=1 || mc=0
-                fi
+            read_mouse() {
+                mp=""; mc=0
+                for f in /sys/bus/hid/drivers/razermouse/*/charge_level; do
+                    [ -r "$f" ] || continue
+                    p=$(( $(cat "$f") * 100 / 255 ))
+                    if [ -z "$mp" ] || [ "$p" -gt "$mp" ]; then
+                        mp=$p
+                        s="\${f%charge_level}charge_status"
+                        { [ -r "$s" ] && [ "$(cat "$s")" = 1 ]; } && mc=1 || mc=0
+                    fi
+                done
+            }
+            # 0% right after plug/unplug is the handshake, not a reading —
+            # retry like waybar's battery.sh did (instant when the read is good)
+            read_mouse
+            for _ in 1 2; do
+                [ "$mp" = "0" ] || break
+                sleep 1
+                read_mouse
             done
             [ "$mp" = "0" ] && mp=""
             pp=""; pc=0; pr=0
@@ -106,16 +116,9 @@ Singleton {
         running: true
 
         stdout: SplitParser {
-            onRead: mouseSettleTimer.restart()
+            onRead: root.refresh()
         }
         onExited: monitorRestartTimer.start() // qmllint disable signal-handler-parameters
-    }
-
-    Timer {
-        id: mouseSettleTimer
-
-        interval: 2000
-        onTriggered: root.refresh()
     }
 
     Timer {
