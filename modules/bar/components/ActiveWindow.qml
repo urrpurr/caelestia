@@ -44,6 +44,8 @@ Item {
         active: !Config.bar.activeWindow.showOnHover
 
         sourceComponent: MouseArea {
+            // Fork: right-click only, consistent with the status-pill popouts
+            acceptedButtons: Qt.RightButton
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
             onPositionChanged: {
