@@ -36,17 +36,17 @@ Item {
                 enabled: Config.dashboard.showPerformance
             },
             {
-                component: weatherComponent,
-                iconName: "cloud",
-                text: qsTr("Weather"),
-                enabled: Config.dashboard.showWeather
-            },
-            {
                 // Fork: peripheral batteries (waybar pill migration)
                 component: batteriesComponent,
                 iconName: "battery_full",
                 text: qsTr("Batteries"),
                 enabled: true
+            },
+            {
+                component: weatherComponent,
+                iconName: "cloud",
+                text: qsTr("Weather"),
+                enabled: Config.dashboard.showWeather
             }
         ];
         return allTabs.filter(tab => tab.enabled);
