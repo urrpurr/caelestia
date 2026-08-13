@@ -12,6 +12,8 @@ Item {
     id: root
 
     required property PopoutState popouts
+    // Fork: screen passed through for per-monitor popouts (BrightnessPopout)
+    required property ShellScreen screen
     readonly property Popout currentPopout: content.children.find(c => c.shouldBeActive) ?? null
     readonly property Item current: currentPopout?.item ?? null
 
@@ -106,6 +108,14 @@ Item {
             name: "audio"
             sourceComponent: AudioPopout {
                 popouts: root.popouts
+            }
+        }
+
+        // Fork: per-screen brightness slider (see BrightnessPopout.qml header)
+        Popout {
+            name: "brightness"
+            sourceComponent: BrightnessPopout {
+                screen: root.screen
             }
         }
 

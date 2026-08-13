@@ -57,6 +57,27 @@ StyledRect {
 
         spacing: 0
 
+        // Fork addition: brightness icon — hovering opens the per-screen
+        // brightness slider popout (name maps to BrightnessPopout via
+        // popouts/Content.qml). Mouse-only control; scroll actions are banned.
+        Item {
+            readonly property string name: "brightness"
+
+            Layout.alignment: Qt.AlignHCenter
+            implicitWidth: brightnessIcon.implicitWidth
+            implicitHeight: brightnessIcon.implicitHeight + Tokens.padding.small
+
+            MaterialIcon {
+                id: brightnessIcon
+
+                anchors.centerIn: parent
+
+                text: "brightness_6"
+                color: root.colour
+                fontStyle: Tokens.font.icon.medium
+            }
+        }
+
         Repeater {
             model: ScriptModel {
                 id: model
