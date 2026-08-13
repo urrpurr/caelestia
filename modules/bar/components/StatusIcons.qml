@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import Quickshell
 import Caelestia.Config
 import qs.components
+import qs.modules.nexus
 import qs.services
 import qs.utils
 import qs.modules.bar.components.status
@@ -56,6 +57,31 @@ StyledRect {
         anchors.bottomMargin: Tokens.padding.medium
 
         spacing: 0
+
+        // Fork addition: gear opening Nexus, living with the status icons.
+        // Empty `name` keeps Bar.qml's hover-popout childAt mapping inert here.
+        Item {
+            readonly property string name: ""
+
+            Layout.alignment: Qt.AlignHCenter
+            implicitWidth: gearIcon.implicitWidth
+            implicitHeight: gearIcon.implicitHeight + Tokens.padding.small
+
+            StateLayer {
+                radius: Tokens.rounding.full
+                onClicked: WindowFactory.create()
+            }
+
+            MaterialIcon {
+                id: gearIcon
+
+                anchors.centerIn: parent
+
+                text: "settings"
+                color: root.colour
+                fontStyle: Tokens.font.icon.medium
+            }
+        }
 
         Repeater {
             model: ScriptModel {
