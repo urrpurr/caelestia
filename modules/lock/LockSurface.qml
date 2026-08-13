@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Effects
-import Quickshell
 import Quickshell.Wayland
 import Caelestia.Config
 import qs.components
@@ -30,24 +29,10 @@ WlSessionLockSurface {
         target: root.lock
     }
 
-    // Fork: mouse-wiggle wakes blanked screens (companion to the key-press
-    // wake in Pam.qml — see comment there). NoButton + hover = observes
-    // movement without stealing clicks from the lock UI.
-    MouseArea {
-        property double lastWakeSpawn: 0
-
-        anchors.fill: parent
-        z: 9999
-        acceptedButtons: Qt.NoButton
-        hoverEnabled: true
-        onPositionChanged: {
-            const now = Date.now();
-            if (now - lastWakeSpawn > 3000) {
-                lastWakeSpawn = now;
-                Quickshell.execDetached(["sh", "-c", "~/.config/hypr/scripts/idle-wake.sh"]);
-            }
-        }
-    }
+    // Fork note: wake-on-input lives in Pam.qml (KEY PRESS ONLY, owner's
+    // deliberate choice 2026-08-13 — mouse motion was tried and removed:
+    // desk bumps/jitter re-lighting three monitors is noise, a keystroke is
+    // a human. Don't re-add a MouseArea wake here.
 
     SequentialAnimation {
         id: unlockAnim
