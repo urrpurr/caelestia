@@ -49,11 +49,10 @@ Region {
         width: panel.width * (1 - root.panels.sidebar.offsetScale) + root.borderThickness
     }
 
-    R {
-        panel: root.panels.osdWrapper
-        x: root.win.width - width
-        width: panel.width * (1 - root.panels.osd.offsetScale) + root.borderThickness + sessionRegion.width
-    }
+    // Fork: OSD input region removed — the OSD is feedback-only now (hover
+    // reveal disabled in Interactions.qml, volume control lives in the bar's
+    // audio popout). Without this region its flash can't steal clicks either.
+    // Restore the R { panel: root.panels.osdWrapper ... } block to revert.
 
     R {
         panel: root.panels.notifications

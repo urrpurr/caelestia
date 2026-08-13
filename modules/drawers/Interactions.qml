@@ -101,7 +101,9 @@ CustomMouseArea {
         const dragY = y - dragStart.y;
 
         if (fullscreen) {
-            root.panels.osd.hovered = inRightPanel(panels.osdWrapper, x, y);
+            // Fork: no hover-reveal for the OSD (fires when crossing monitors);
+            // it still appears on volume/brightness changes.
+            root.panels.osd.hovered = false;
             return;
         }
 
@@ -118,8 +120,11 @@ CustomMouseArea {
         }
 
         if (panels.sidebar.offsetScale === 1) {
-            // Show osd on hover
-            const showOsd = inRightPanel(panels.osdWrapper, x, y);
+            // Fork: hover-reveal disabled — const false instead of
+            // inRightPanel(...) so crossing monitor edges never opens the OSD.
+            // Volume/brightness changes still show it (that path sets
+            // osdShortcutActive, untouched below).
+            const showOsd = false;
 
             // Always update visibility based on hover if not in shortcut mode
             if (!osdShortcutActive) {
@@ -157,8 +162,9 @@ CustomMouseArea {
             }
         } else {
             const outOfSidebar = x < width - panels.sidebar.width * (1 - panels.sidebar.offsetScale);
-            // Show osd on hover
-            const showOsd = outOfSidebar && inRightPanel(panels.osdWrapper, x, y);
+            // Fork: hover-reveal disabled here too (this is the sidebar-open
+            // branch — the one that showed the OSD left of the sidebar).
+            const showOsd = false;
 
             // Always update visibility based on hover if not in shortcut mode
             if (!osdShortcutActive) {
