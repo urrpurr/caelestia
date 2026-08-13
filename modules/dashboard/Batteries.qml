@@ -13,7 +13,9 @@ import qs.services
 Item {
     id: root
 
-    implicitWidth: layout.implicitWidth + Tokens.padding.large * 2
+    // Floor on the width: the dashboard sizes itself to the visible pane, and
+    // a narrow pane crushes the five tab labels together
+    implicitWidth: Math.max(layout.implicitWidth + Tokens.padding.large * 2, 700)
     implicitHeight: layout.implicitHeight + Tokens.padding.large * 2
 
     function sevColour(pct, charging: bool): color {
@@ -93,7 +95,7 @@ Item {
             }
 
             StyledProgressBar {
-                Layout.preferredWidth: 280
+                Layout.preferredWidth: 420
                 visible: row.present
                 value: (row.pct ?? 0) / 100
                 fgColour: root.sevColour(row.pct, row.charging)
