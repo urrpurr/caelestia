@@ -49,6 +49,19 @@ Item {
             charging: Peripherals.phoneCharging
             absentText: Peripherals.phoneReachable ? qsTr("Connected, no battery data yet") : qsTr("Not connected (off LAN or kdeconnectd down)")
         }
+
+        DeviceRow {
+            // GIP protocol: discrete level, no percentage, no charging concept.
+            // Level → pseudo-pct lands exactly in the severity bands.
+            readonly property var levelMap: ({ "Low": 15, "Normal": 45, "High": 75, "Full": 100 })
+
+            icon: "sports_esports"
+            name: qsTr("Xbox controller")
+            pct: Peripherals.controllerLevel !== null ? levelMap[Peripherals.controllerLevel] ?? null : null
+            valueText: Peripherals.controllerLevel ?? ""
+            charging: false
+            absentText: Peripherals.controllerNoBattery ? qsTr("No battery (USB powered or empty bay)") : qsTr("Off / not connected")
+        }
     }
 
     component DeviceRow: RowLayout {
@@ -59,6 +72,7 @@ Item {
         required property var pct
         required property bool charging
         required property string absentText
+        property string valueText: pct !== null ? `${pct}%` : ""
 
         readonly property bool present: pct !== null
 
@@ -82,7 +96,7 @@ Item {
                 }
 
                 StyledText {
-                    text: row.present ? `${row.pct}%` : ""
+                    text: row.present ? row.valueText : ""
                     color: root.sevColour(row.pct, row.charging)
                     font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
                 }
