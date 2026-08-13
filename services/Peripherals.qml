@@ -23,6 +23,12 @@ Singleton {
     property bool phoneReachable: false
     property var phonePct: null
     property bool phoneCharging: false
+    // Xbox controller (xone/GIP): discrete level only — the protocol carries
+    // no percentage and no charging concept (owner-documented driver contract:
+    // capacity_level Low/Normal/High/Full, or Unknown = empty bay/USB-powered;
+    // sysfs node exists only while the controller session is active).
+    property var controllerLevel: null
+    property bool controllerNoBattery: false
 
     function refresh(): void {
         proc.running = true;
@@ -62,7 +68,14 @@ Singleton {
                 { [ -n "$c" ] && [ "$c" -ge 0 ] 2>/dev/null; } && pp=$c
                 [ "$(busctl --user get-property org.kde.kdeconnect $dev/battery org.kde.kdeconnect.device.battery isCharging 2>/dev/null)" = "b true" ] && pc=1
             fi
-            printf '{"mousePct":%s,"mouseCharging":%s,"phoneReachable":%s,"phonePct":%s,"phoneCharging":%s}' "\${mp:-null}" $mc $pr "\${pp:-null}" $pc
+            xl="null"; xnb=0
+            for g in /sys/class/power_supply/gip*/capacity_level; do
+                [ -r "$g" ] || continue
+                lvl=$(cat "$g")
+                if [ "$lvl" = "Unknown" ]; then xnb=1; else xl="\\"$lvl\\""; fi
+                break
+            done
+            printf '{"mousePct":%s,"mouseCharging":%s,"phoneReachable":%s,"phonePct":%s,"phoneCharging":%s,"controllerLevel":%s,"controllerNoBattery":%s}' "\${mp:-null}" $mc $pr "\${pp:-null}" $pc "$xl" $xnb
         `]
 
         stdout: StdioCollector {
@@ -74,6 +87,8 @@ Singleton {
                     root.phoneReachable = !!d.phoneReachable;
                     root.phonePct = d.phonePct;
                     root.phoneCharging = !!d.phoneCharging;
+                    root.controllerLevel = d.controllerLevel;
+                    root.controllerNoBattery = !!d.controllerNoBattery;
                 } catch (e) {
                     console.warn("Peripherals: bad poll output:", text);
                 }
@@ -122,6 +137,20 @@ Singleton {
         onExited: monitorRestartTimer.start() // qmllint disable signal-handler-parameters
     }
 
+    Process {
+        id: controllerMonitor
+
+        // Xbox controller on/off = its power_supply node appearing/vanishing
+        // (wireless via always-plugged dongle — no usb event, unlike the mouse)
+        command: ["udevadm", "monitor", "--udev", "--subsystem-match=power_supply"]
+        running: true
+
+        stdout: SplitParser {
+            onRead: root.refresh()
+        }
+        onExited: monitorRestartTimer.start() // qmllint disable signal-handler-parameters
+    }
+
     Timer {
         id: monitorRestartTimer
 
@@ -129,6 +158,7 @@ Singleton {
         onTriggered: {
             phoneMonitor.running = true;
             mouseMonitor.running = true;
+            controllerMonitor.running = true;
         }
     }
 }
