@@ -20,6 +20,19 @@ Scope {
         onPressed: WindowFactory.create()
     }
 
+    // Fork: hold-Super bar reveal. The global-shortcut protocol delivers both
+    // press and release through ONE hyprland bind (SUPER, SUPER_L -> global,
+    // caelestia:showBar in hyprland.lua) — no bindr pair needed. Only
+    // non-persistent bars change (the OLED; see BarWrapper.persistentBar).
+    // qmllint disable unresolved-type
+    CustomShortcut {
+        // qmllint enable unresolved-type
+        name: "showBar"
+        description: "Show bar while Super is held"
+        onPressed: ShellState.setAll("bar", true)
+        onReleased: ShellState.setAll("bar", false)
+    }
+
     // qmllint disable unresolved-type
     CustomShortcut {
         // qmllint enable unresolved-type
@@ -130,6 +143,20 @@ Scope {
             if (typeof screenState[drawer] !== "boolean")
                 return "unknown";
             return screenState[drawer] ? "1" : "0";
+        }
+
+        // Fork: explicit show/hide on EVERY screen, for hold-style keybinds
+        // (Super pressed -> reveal bar, released -> hide; toggle would race).
+        // Named "reveal" NOT "show": `qs ipc show` is a CLI subcommand and a
+        // function named show is unreachable from the CLI (arg parse collision).
+        // Only non-persistent bars visibly change — i.e. just the OLED, see
+        // BarWrapper.persistentBar.
+        function reveal(drawer: string): void {
+            ShellState.setAll(drawer, true);
+        }
+
+        function hide(drawer: string): void {
+            ShellState.setAll(drawer, false);
         }
 
         target: "drawers"

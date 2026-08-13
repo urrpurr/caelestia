@@ -13,6 +13,14 @@ Singleton {
         return states.instances.some(s => s.sidebar);
     }
 
+    // Fork: set a drawer's state on every screen at once (used by the drawers
+    // show/hide IPC for the super-held bar reveal — see Shortcuts.qml).
+    function setAll(drawer: string, value: bool): void {
+        for (const s of states.instances)
+            if (typeof s[drawer] === "boolean")
+                s[drawer] = value;
+    }
+
     function forScreen(screen: ShellScreen): ScreenState {
         for (const s of states.instances)
             if (s.modelData === screen)
