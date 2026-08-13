@@ -55,7 +55,9 @@ StyledRect {
 
             StyledText {
                 Layout.fillWidth: true
-                text: IdleInhibitor.enabled ? qsTr("Preventing sleep mode") : qsTr("Normal power management")
+                // Fork: reworded — on this setup the inhibitor blocks hypridle's
+                // idle timeout (auto-lock + screens-off), nothing sleeps.
+                text: IdleInhibitor.enabled ? qsTr("Blocking idle auto-lock") : qsTr("Idle auto-lock active")
                 color: Colours.palette.m3onSurfaceVariant
                 font: Tokens.font.body.small
                 elide: Text.ElideRight
