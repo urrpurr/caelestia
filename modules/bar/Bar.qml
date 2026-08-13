@@ -47,7 +47,9 @@ ColumnLayout {
         if (id === "statusIcons" && Config.bar.popouts.statusIcons) {
             const items = (ch.item as StatusIcons).items;
             const icon = items.childAt(items.width / 2, mapToItem(items, 0, y).y);
-            if (icon) {
+            // Skip entries with an empty popout name (fork: the Nexus gear) —
+            // an unknown name renders an empty popout husk.
+            if (icon && icon.name) {
                 popouts.currentName = icon.name;
                 popouts.currentCenter = Qt.binding(() => icon.mapToItem(root, 0, icon.implicitHeight / 2).y);
                 popouts.hasCurrent = true;
