@@ -110,9 +110,10 @@ Singleton {
     Process {
         id: mouseMonitor
 
-        // Razer vendor id 1532; delay before reading — right after plug the
-        // mouse reports a bogus 0% while handshaking (see battery.sh note)
-        command: ["bash", "-c", "stdbuf -oL udevadm monitor --udev --property --subsystem-match=usb | stdbuf -oL grep --line-buffered 'ID_VENDOR_ID=1532'"]
+        // Razer vendor id 1532. Match PRODUCT=, NOT ID_VENDOR_ID= — usb REMOVE
+        // events carry no ID_VENDOR_ID, so unplugs would be invisible (trap
+        // documented in the old 99-razer-waybar.rules, re-verified 2026-08-13).
+        command: ["bash", "-c", "stdbuf -oL udevadm monitor --udev --property --subsystem-match=usb | stdbuf -oL grep --line-buffered 'PRODUCT=1532/'"]
         running: true
 
         stdout: SplitParser {
