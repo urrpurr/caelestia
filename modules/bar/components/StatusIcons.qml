@@ -13,6 +13,10 @@ StyledRect {
     id: root
 
     property color colour: Colours.palette.m3secondary
+    // Fork: mute alarm colour for speaker/mic icons. Theme's m3error (owner
+    // tried vivid #ff3333 2026-08-14, chose the theme pastel — swap the value
+    // back if a mute ever gets overlooked again).
+    readonly property color mutedColour: Colours.palette.m3error
     readonly property alias items: iconColumn
 
     // Fork: right-click popout opening (owner dislikes hover triggers).
@@ -127,7 +131,9 @@ StyledRect {
 
                             animate: true
                             text: Icons.getVolumeIcon(Audio.volume, Audio.muted)
-                            color: root.colour
+                            // Fork: red when muted — mute state must be glanceable
+                            // (owner lost 5 min to an invisible mic mute, 2026-08-14)
+                            color: Audio.muted ? root.mutedColour : root.colour
                             fontStyle: Tokens.font.icon.medium
                             fill: 1
 
@@ -161,7 +167,8 @@ StyledRect {
 
                             animate: true
                             text: Icons.getMicVolumeIcon(Audio.sourceVolume, Audio.sourceMuted)
-                            color: root.colour
+                            // Fork: red when muted (see speaker icon comment)
+                            color: Audio.sourceMuted ? root.mutedColour : root.colour
                             fontStyle: Tokens.font.icon.medium
                             fill: 1
 
