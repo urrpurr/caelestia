@@ -83,7 +83,12 @@ Singleton {
     Process {
         id: ddcProc
 
-        command: ["ddcutil", "detect", "--brief"]
+        // NOT a bare `ddcutil detect`: that scans every i2c bus, and probing a
+        // bus whose panel is powered down relights it — which, since this runs
+        // on every onMonitorsChanged, feeds back into itself and leaves the bar
+        // stale on one screen. The wrapper serves cache while anything is dark.
+        // See scripts/ddc-detect-safe.sh for the full failure signature.
+        command: [Quickshell.shellPath("scripts/ddc-detect-safe.sh")]
         stdout: StdioCollector {
             onStreamFinished: root.ddcMonitors = text.trim().split("\n\n").filter(d => d.startsWith("Display ")).map(d => ({
                         busNum: d.match(/I2C bus:[ ]*\/dev\/i2c-([0-9]+)/)[1],
