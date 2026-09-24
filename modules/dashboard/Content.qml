@@ -39,7 +39,7 @@ Item {
                 // Fork: peripheral batteries (waybar pill migration)
                 component: batteriesComponent,
                 iconName: "battery_full",
-                text: qsTr("Batteries"),
+                text: Tr.tr("Batteries"),
                 enabled: true
             },
             {
