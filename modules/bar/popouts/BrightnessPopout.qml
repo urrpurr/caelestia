@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Caelestia.Config
+import Caelestia.I18n
 import qs.components
 import qs.components.controls
 import qs.services
@@ -30,7 +31,7 @@ Item {
 
         StyledText {
             Layout.alignment: Qt.AlignHCenter
-            text: qsTr("Brightness")
+            text: Tr.tr("Brightness")
             font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
         }
 

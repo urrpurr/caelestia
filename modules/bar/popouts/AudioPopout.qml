@@ -71,7 +71,7 @@ Item {
             Layout.fillWidth: true
             Layout.topMargin: Tokens.spacing.medium
             verticalPadding: Tokens.padding.extraSmall
-            text: qsTr("Reconnect output")
+            text: Tr.tr("Reconnect output")
             icon: "restart_alt"
 
             onClicked: reconnectSink.running = true

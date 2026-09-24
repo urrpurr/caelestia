@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import Caelestia.Config
+import Caelestia.I18n
 import qs.components
 import qs.components.controls
 import qs.services
@@ -36,18 +37,18 @@ Item {
 
         DeviceRow {
             icon: "mouse"
-            name: qsTr("Razer Naga V2 Pro")
+            name: "Razer Naga V2 Pro"
             pct: Peripherals.mousePct
             charging: Peripherals.mouseCharging
-            absentText: qsTr("Not detected (dongle off or asleep)")
+            absentText: Tr.tr("Not detected (dongle off or asleep)")
         }
 
         DeviceRow {
             icon: "smartphone"
-            name: qsTr("Galaxy S25+")
+            name: "Galaxy S25+"
             pct: Peripherals.phonePct
             charging: Peripherals.phoneCharging
-            absentText: Peripherals.phoneReachable ? qsTr("Connected, no battery data yet") : qsTr("Not connected (off LAN or kdeconnectd down)")
+            absentText: Peripherals.phoneReachable ? Tr.tr("Connected, no battery data yet") : Tr.tr("Not connected (off LAN or kdeconnectd down)")
         }
 
         DeviceRow {
@@ -56,11 +57,11 @@ Item {
             readonly property var levelMap: ({ "Low": 15, "Normal": 45, "High": 75, "Full": 100 })
 
             icon: "sports_esports"
-            name: qsTr("Xbox controller")
+            name: Tr.tr("Xbox controller")
             pct: Peripherals.controllerLevel !== null ? levelMap[Peripherals.controllerLevel] ?? null : null
             valueText: Peripherals.controllerLevel ?? ""
             charging: false
-            absentText: Peripherals.controllerNoBattery ? qsTr("No battery (USB powered or empty bay)") : qsTr("Off / not connected")
+            absentText: Peripherals.controllerNoBattery ? Tr.tr("No battery (USB powered or empty bay)") : Tr.tr("Off / not connected")
         }
     }
 

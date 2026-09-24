@@ -5,6 +5,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell.Services.Pipewire
 import Caelestia.Config
+import Caelestia.I18n
 import qs.components
 import qs.components.controls
 import qs.services
@@ -17,7 +18,7 @@ Item {
 
     required property PopoutState popouts
 
-    implicitWidth: layout.implicitWidth + Tokens.padding.medium * 2
+    implicitWidth: Tokens.sizes.bar.audioWidth
     implicitHeight: layout.implicitHeight + Tokens.padding.medium * 2
 
     ButtonGroup {
@@ -28,11 +29,12 @@ Item {
         id: layout
 
         anchors.left: parent.left
+        anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         spacing: Tokens.spacing.medium
 
         StyledText {
-            text: qsTr("Input device")
+            text: Tr.trCtx("Input device", "audio input device")
             font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
         }
 
@@ -42,6 +44,7 @@ Item {
             StyledRadioButton {
                 required property PwNode modelData
 
+                Layout.fillWidth: true
                 ButtonGroup.group: sources
                 checked: Audio.source?.id === modelData.id
                 onClicked: Audio.setAudioSource(modelData)
@@ -51,7 +54,7 @@ Item {
 
         StyledText {
             Layout.topMargin: Tokens.spacing.medium
-            text: qsTr("Mic volume (%1)").arg(Audio.sourceMuted ? qsTr("Muted") : `${Math.round(Audio.sourceVolume * 100)}%`)
+            text: Audio.sourceMuted ? Tr.tr("Mic volume (muted)") : Tr.tr("Mic volume (%1%)").arg(Math.round(Audio.sourceVolume * 100))
             font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
         }
 
@@ -82,7 +85,7 @@ Item {
             inactiveColour: Colours.palette.m3primaryContainer
             inactiveOnColour: Colours.palette.m3onPrimaryContainer
             verticalPadding: Tokens.padding.extraSmall
-            text: qsTr("Open settings")
+            text: Tr.tr("Open settings")
             icon: "settings"
 
             onClicked: root.popouts.detachRequested("audio")
