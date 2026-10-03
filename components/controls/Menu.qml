@@ -98,6 +98,11 @@ MouseArea {
 
         MouseArea {
             anchors.fill: parent
+            // Fork: explicit — the inherited disable from the root doesn't
+            // reach this after the reparent to interactionWrapper, so a
+            // COLLAPSED (invisible) menu kept eating clicks/hover over its
+            // open-state area (killed the Displays card's switch, 2026-10-03).
+            enabled: root.expanded
             hoverEnabled: true
             onWheel: e => e.accepted = true
         }
