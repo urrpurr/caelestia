@@ -37,9 +37,11 @@ Item {
                 enabled: Config.dashboard.showPerformance
             },
             {
-                // Fork: peripheral batteries (waybar pill migration)
+                // Fork: peripheral batteries (waybar pill migration). Icon is
+                // live (lowest battery) — see Tabs.qml batteryTab
                 component: batteriesComponent,
                 iconName: "battery_full",
+                batteryTab: true,
                 text: Tr.tr("Batteries"),
                 enabled: true
             },

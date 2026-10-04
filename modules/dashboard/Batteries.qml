@@ -10,7 +10,7 @@ import qs.services
 
 // Fork addition: "Batteries" dashboard tab — peripheral battery levels,
 // migrated from the retired waybar battery pill. Data: services/Peripherals.qml.
-// Severity mirrors battery.sh: <25% error, <50% warn, charging is never an alarm.
+// Severity colours: Peripherals.sevColour.
 Item {
     id: root
 
@@ -18,16 +18,6 @@ Item {
     // a narrow pane crushes the five tab labels together
     implicitWidth: Math.max(layout.implicitWidth + Tokens.padding.large * 2, 700)
     implicitHeight: layout.implicitHeight + Tokens.padding.large * 2
-
-    function sevColour(pct, charging: bool): color {
-        if (charging || pct === null)
-            return Colours.palette.m3primary;
-        if (pct < 25)
-            return Colours.palette.m3error;
-        if (pct < 50)
-            return Colours.palette.m3tertiary;
-        return Colours.palette.m3primary;
-    }
 
     ColumnLayout {
         id: layout
@@ -52,13 +42,10 @@ Item {
         }
 
         DeviceRow {
-            // GIP protocol: discrete level, no percentage, no charging concept.
-            // Level → pseudo-pct lands exactly in the severity bands.
-            readonly property var levelMap: ({ "Low": 15, "Normal": 45, "High": 75, "Full": 100 })
-
+            // GIP protocol: discrete level, no percentage, no charging concept
             icon: "sports_esports"
             name: Tr.tr("Xbox controller")
-            pct: Peripherals.controllerLevel !== null ? levelMap[Peripherals.controllerLevel] ?? null : null
+            pct: Peripherals.controllerPct
             valueText: Peripherals.controllerLevel ?? ""
             charging: false
             absentText: Peripherals.controllerNoBattery ? Tr.tr("No battery (USB powered or empty bay)") : Tr.tr("Off / not connected")
@@ -81,7 +68,7 @@ Item {
 
         MaterialIcon {
             text: row.icon
-            color: root.sevColour(row.pct, row.charging)
+            color: Peripherals.sevColour(row.pct, row.charging)
             fontStyle: Tokens.font.icon.large
         }
 
@@ -98,7 +85,7 @@ Item {
 
                 StyledText {
                     text: row.present ? row.valueText : ""
-                    color: root.sevColour(row.pct, row.charging)
+                    color: Peripherals.sevColour(row.pct, row.charging)
                     font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
                 }
 
@@ -113,7 +100,7 @@ Item {
                 Layout.preferredWidth: 420
                 visible: row.present
                 value: (row.pct ?? 0) / 100
-                fgColour: root.sevColour(row.pct, row.charging)
+                fgColour: Peripherals.sevColour(row.pct, row.charging)
                 wavy: row.charging
             }
 
