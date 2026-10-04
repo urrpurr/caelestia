@@ -49,7 +49,11 @@ Item {
             delegate: Tab {
                 required property var modelData
 
-                iconName: modelData.iconName
+                // Fork: Batteries tab icon shows the lowest device battery, coloured
+                // by severity even when not selected. Read live here, not in the tab
+                // object — changing Content.qml's array would recreate every page.
+                iconName: modelData.batteryTab ? Peripherals.lowestIcon : modelData.iconName
+                alertColour: modelData.batteryTab && Peripherals.lowest !== null && !Peripherals.lowest.charging && Peripherals.lowest.pct < 50 ? Peripherals.sevColour(Peripherals.lowest.pct, false) : null
                 text: modelData.text
             }
         }
@@ -113,6 +117,7 @@ Item {
         id: tab
 
         required property string iconName
+        property var alertColour: null
         readonly property bool current: TabBar.tabBar.currentItem === this
 
         Layout.fillWidth: true
@@ -160,7 +165,7 @@ Item {
                 anchors.bottom: label.top
 
                 text: tab.iconName
-                color: tab.current ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                color: tab.alertColour ?? (tab.current ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant)
                 fill: tab.current ? 1 : 0
                 fontStyle: Tokens.font.icon.medium
 

@@ -29,6 +29,43 @@ Singleton {
     // sysfs node exists only while the controller session is active).
     property var controllerLevel: null
     property bool controllerNoBattery: false
+    // Level → pseudo-pct lands exactly in the severity bands
+    readonly property var controllerPct: controllerLevel !== null ? ({ "Low": 15, "Normal": 45, "High": 75, "Full": 100 })[controllerLevel] ?? null : null
+
+    // Lowest present battery, charging or not — drives the dashboard tab icon so
+    // a low device shows without opening the tab. Charging devices are NOT
+    // excluded (that hid a phone at 21% on charge behind "full"): they show a
+    // charging glyph instead, and only the colour skips them (never an alarm).
+    readonly property var lowest: {
+        const devs = [];
+        if (mousePct !== null)
+            devs.push({ pct: mousePct, charging: mouseCharging });
+        if (phonePct !== null)
+            devs.push({ pct: phonePct, charging: phoneCharging });
+        if (controllerPct !== null)
+            devs.push({ pct: controllerPct, charging: false });
+        return devs.length ? devs.reduce((a, b) => b.pct < a.pct ? b : a) : null;
+    }
+    readonly property string lowestIcon: {
+        if (lowest === null || lowest.pct >= 95)
+            return lowest?.charging ? "battery_charging_full" : "battery_full";
+        if (lowest.charging) {
+            const steps = [[25, 20], [40, 30], [55, 50], [70, 60], [85, 80], [95, 90]];
+            return `battery_charging_${steps.find(([max]) => lowest.pct < max)[1]}`;
+        }
+        return `battery_${Math.min(6, Math.floor(lowest.pct / 100 * 7))}_bar`;
+    }
+
+    // Severity mirrors battery.sh: <25% error, <50% warn, charging is never an alarm
+    function sevColour(pct, charging: bool): color {
+        if (charging || pct === null)
+            return Colours.palette.m3primary;
+        if (pct < 25)
+            return Colours.palette.m3error;
+        if (pct < 50)
+            return Colours.palette.m3tertiary;
+        return Colours.palette.m3primary;
+    }
 
     function refresh(): void {
         proc.running = true;
