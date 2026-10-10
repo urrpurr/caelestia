@@ -147,6 +147,11 @@ StyledClippingRect {
                     }
 
                     MouseArea {
+                        // Fork: workspace clicks disabled. Owner switches workspaces
+                        // by keyboard only, and clicking the active workspace toggled
+                        // the empty "special" special workspace (★), which looked like
+                        // the bar broke. Scrolling is off via bar.scrollActions.workspaces.
+                        enabled: false
                         anchors.fill: list
                         onClicked: event => {
                             const ws = (list.itemAt(event.x, event.y) as Workspace)?.ws;
