@@ -63,6 +63,11 @@ ColumnLayout {
     }
 
     Item {
+        // Fork: Num Lock indicator hidden. Owner keeps Num Lock permanently on
+        // (Razer Naga side buttons send numpad keys) and the keyboard has no
+        // Num Lock key, so the "1" icon was permanent noise. Caps Lock badge
+        // above is kept. ColumnLayout skips invisible children, so no gap.
+        visible: false
         implicitWidth: numlockIcon.implicitWidth
         implicitHeight: Math.round(root.numHeight)
 
