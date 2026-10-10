@@ -26,9 +26,10 @@ StyledClippingRect {
     property real blur: onSpecial ? 1 : 0
 
     implicitWidth: Tokens.sizes.bar.innerWidth
-    implicitHeight: groups.implicitHeight + Tokens.padding.extraSmall * 2
+    implicitHeight: groups.implicitHeight
 
-    color: Colours.tPalette.m3surfaceContainer
+    // Custom: no shared background; each screen group draws its own pill below
+    color: "transparent"
     radius: Tokens.rounding.full
 
     Item {
@@ -44,17 +45,17 @@ StyledClippingRect {
             blurMax: 32
         }
 
-        // One group per screen: monitor header, then that screen's workspaces.
-        // Filled accent capsule = focused screen's active workspace; outline ring = other screens' active one.
+        // One pill per screen (leftmost screen on top), no header. The pill of the screen this bar
+        // is on gets a faint accent tint. Filled accent capsule = focused screen's active workspace;
+        // outline ring = other screens' active one.
         ColumnLayout {
             id: groups
 
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            anchors.margins: Tokens.padding.extraSmall
 
-            spacing: 0
+            spacing: Tokens.padding.small
 
             Repeater {
                 model: root.monitorsByPos.length
@@ -74,8 +75,13 @@ StyledClippingRect {
                     }
 
                     Layout.fillWidth: true
-                    Layout.topMargin: index > 0 ? Tokens.padding.small : 0
-                    implicitHeight: header.implicitHeight + list.layoutHeight
+                    implicitHeight: list.layoutHeight + Tokens.padding.extraSmall * 2
+
+                    StyledRect {
+                        anchors.fill: parent
+                        radius: Tokens.rounding.full
+                        color: group.isThisScreen ? Qt.tint(Colours.tPalette.m3surfaceContainer, Qt.alpha(Colours.palette.m3primary, 0.12)) : Colours.tPalette.m3surfaceContainer
+                    }
 
                     StyledRect {
                         visible: group.activeItem !== null
@@ -97,30 +103,13 @@ StyledClippingRect {
                         }
                     }
 
-                    RowLayout {
-                        id: header
-
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        spacing: 0
-
-                        MaterialIcon {
-                            text: "monitor"
-                            color: group.isThisScreen ? Colours.palette.m3primary : Colours.palette.m3outline
-                        }
-
-                        StyledText {
-                            text: group.index.toString()
-                            color: group.isThisScreen ? Colours.palette.m3primary : Colours.palette.m3outline
-                            font: Tokens.font.label.small
-                        }
-                    }
-
                     LazyListView {
                         id: list
 
                         anchors.left: parent.left
                         anchors.right: parent.right
-                        anchors.top: header.bottom
+                        anchors.top: parent.top
+                        anchors.margins: Tokens.padding.extraSmall
                         implicitHeight: contentHeight
 
                         spacing: 0
@@ -135,7 +124,8 @@ StyledClippingRect {
                             ws: modelData
                             monitor: group.mon
                             monFocused: group.monFocused
-                            showNumber: true
+                            // Number comes from the stock Text display (empty labels in shell.json)
+                            showNumber: false
 
                             displayType: Config.bar.workspaces.displayType
                             showWindows: Config.bar.workspaces.showWindows
