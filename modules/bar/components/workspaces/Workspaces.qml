@@ -5,6 +5,7 @@ import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
+import Caelestia
 import Caelestia.Components
 import Caelestia.Config
 import qs.components
@@ -70,7 +71,7 @@ ClipRect {
                     readonly property bool isThisScreen: root.monitor === mon
                     readonly property bool monFocused: Hypr.focusedMonitor === mon
                     readonly property Workspace activeItem: {
-                        list.itemsDirty;
+                        CUtils.dependency(list.itemsDirty);
                         return list.itemAtIndex(wsIds.indexOf(activeWsId)) as Workspace;
                     }
 
