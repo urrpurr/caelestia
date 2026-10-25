@@ -91,6 +91,25 @@ Singleton {
         reloadableId: "players"
     }
 
+    // Fork: follow the player that most recently started playing, so media keys hit
+    // the mpv episode you just started rather than an idle YouTube tab that happens to
+    // be list[0]. Writes manualActive, so a dashboard pick and a playback start are the
+    // same kind of event — the latest one wins.
+    Variants {
+        model: root.list
+
+        Connections {
+            required property MprisPlayer modelData
+
+            function onIsPlayingChanged(): void {
+                if (modelData.isPlaying)
+                    props.manualActive = modelData;
+            }
+
+            target: modelData
+        }
+    }
+
     // qmllint disable unresolved-type
     CustomShortcut {
         // qmllint enable unresolved-type
@@ -124,6 +143,33 @@ Singleton {
             const active = root.active;
             if (active && active.canGoNext)
                 active.next();
+        }
+    }
+
+    // Fork: 5 s seek on the active player — bound to the keyboard's prev/next keys
+    // (videos, not music). MPRIS Seek; browsers map it to the page's Media Session
+    // seekto handler (YouTube works).
+    // qmllint disable unresolved-type
+    CustomShortcut {
+        // qmllint enable unresolved-type
+        name: "mediaSeekBack"
+        description: "Seek back 5 seconds"
+        onPressed: {
+            const active = root.active;
+            if (active && active.canSeek)
+                active.seek(-5);
+        }
+    }
+
+    // qmllint disable unresolved-type
+    CustomShortcut {
+        // qmllint enable unresolved-type
+        name: "mediaSeekForward"
+        description: "Seek forward 5 seconds"
+        onPressed: {
+            const active = root.active;
+            if (active && active.canSeek)
+                active.seek(5);
         }
     }
 
